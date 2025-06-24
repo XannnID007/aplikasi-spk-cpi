@@ -71,10 +71,13 @@ class CpiService
                return $b['skor_total'] <=> $a['skor_total'];
           });
 
-          $skorTertinggi = $hasilCpi[0]['skor_total'];
+          // PERBAIKAN: Gunakan nilai referensi 150 (nilai maksimum teoritis) 
+          // seperti yang digunakan di Excel, bukan nilai tertinggi aktual
+          $nilaiReferensi = 150; // Nilai maksimum teoritis CPI
 
           foreach ($hasilCpi as $index => $hasil) {
-               $persentase = ($hasil['skor_total'] / $skorTertinggi) * 100;
+               // Hitung persentase berdasarkan nilai referensi 150
+               $persentase = ($hasil['skor_total'] / $nilaiReferensi) * 100;
                $rekomendasi = $this->buatRekomendasi($persentase);
 
                HasilCpi::create([

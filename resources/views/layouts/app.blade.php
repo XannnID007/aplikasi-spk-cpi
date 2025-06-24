@@ -617,6 +617,13 @@
                         <i class="fas fa-edit"></i>Data Penilaian
                     </a>
                 </li>
+                <!-- MENU BARU: Data Perhitungan -->
+                <li>
+                    <a href="{{ route('admin.perhitungan.index') }}"
+                        class="{{ request()->routeIs('admin.perhitungan.*') ? 'active' : '' }}">
+                        <i class="fas fa-calculator"></i>Data Perhitungan
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('admin.hasil-cpi.index') }}"
                         class="{{ request()->routeIs('admin.hasil-cpi.*') ? 'active' : '' }}">
