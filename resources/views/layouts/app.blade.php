@@ -630,6 +630,11 @@
                         <i class="fas fa-chart-line"></i>Hasil CPI
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('admin.cetak-hasil') }}" target="_blank">
+                        <i class="fas fa-print"></i>Cetak Laporan
+                    </a>
+                </li>
             @else
                 <!-- Guru Menu -->
                 <li>
@@ -779,6 +784,304 @@
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         const tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+    <!-- Validation Modal Script -->
+    <script>
+        // Validation Modal Class
+        class ValidationModal {
+            constructor() {
+                this.createModal();
+                this.bindEvents();
+            }
+
+            createModal() {
+                const modalHTML = `
+            <div class="modal fade" id="validationModal" tabindex="-1" aria-labelledby="validationModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title fw-bold text-primary" id="validationModalLabel">
+                                <i class="fas fa-shield-check me-2"></i>Konfirmasi Data
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body pt-2">
+                            <div class="text-center mb-3">
+                                <div class="validation-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-clipboard-check text-primary fs-4"></i>
+                                </div>
+                            </div>
+                            <h6 class="text-center fw-bold mb-3" id="validationTitle">Periksa Data Sebelum Menyimpan</h6>
+                            <div id="validationContent" class="bg-light rounded p-3">
+                                <!-- Content akan diisi dinamis -->
+                            </div>
+                            <div class="mt-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="confirmDataAccuracy">
+                                    <label class="form-check-label small text-muted" for="confirmDataAccuracy">
+                                        Saya telah memeriksa dan memastikan data yang dimasukkan sudah benar
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-2"></i>Batal
+                            </button>
+                            <button type="button" class="btn btn-primary" id="confirmSubmit" disabled>
+                                <i class="fas fa-save me-2"></i>Ya, Simpan Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+                if (!document.getElementById('validationModal')) {
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                }
+            }
+
+            bindEvents() {
+                document.addEventListener('change', (e) => {
+                    if (e.target.id === 'confirmDataAccuracy') {
+                        const confirmBtn = document.getElementById('confirmSubmit');
+                        confirmBtn.disabled = !e.target.checked;
+                    }
+                });
+
+                document.addEventListener('submit', (e) => {
+                    const form = e.target;
+
+                    if (form.hasAttribute('data-skip-validation')) {
+                        return;
+                    }
+
+                    const formAction = form.action;
+                    const shouldValidate = formAction.includes('/store') ||
+                        formAction.includes('/create') ||
+                        form.classList.contains('needs-validation-modal');
+
+                    if (shouldValidate) {
+                        e.preventDefault();
+                        this.showValidationModal(form);
+                    }
+                });
+            }
+
+            showValidationModal(form) {
+                const formData = new FormData(form);
+                const formType = this.detectFormType(form);
+
+                document.getElementById('validationTitle').textContent = `Konfirmasi Data ${formType}`;
+                document.getElementById('validationContent').innerHTML = this.generateValidationContent(formData,
+                    formType);
+
+                document.getElementById('confirmDataAccuracy').checked = false;
+                document.getElementById('confirmSubmit').disabled = true;
+
+                const modal = new bootstrap.Modal(document.getElementById('validationModal'));
+                modal.show();
+
+                document.getElementById('confirmSubmit').onclick = () => {
+                    modal.hide();
+                    this.submitForm(form);
+                };
+            }
+
+            detectFormType(form) {
+                const action = form.action.toLowerCase();
+
+                if (action.includes('user')) return 'User';
+                if (action.includes('siswa')) return 'Siswa';
+                if (action.includes('kriteria')) return 'Kriteria';
+                if (action.includes('penilaian')) return 'Penilaian';
+
+                return 'Data';
+            }
+
+            generateValidationContent(formData, formType) {
+                let content = '<div class="row g-2">';
+
+                const fieldMappings = {
+                    'User': {
+                        'name': 'Nama Lengkap',
+                        'email': 'Email',
+                        'role': 'Role',
+                        'nip': 'NIP',
+                        'telepon': 'Telepon'
+                    },
+                    'Siswa': {
+                        'kode': 'Kode Siswa',
+                        'nama': 'Nama Lengkap',
+                        'jenis_kelamin': 'Jenis Kelamin',
+                        'tanggal_lahir': 'Tanggal Lahir',
+                        'nama_orang_tua': 'Nama Orang Tua'
+                    },
+                    'Kriteria': {
+                        'kode': 'Kode Kriteria',
+                        'nama': 'Nama Kriteria',
+                        'tren': 'Tren',
+                        'bobot': 'Bobot',
+                        'keterangan': 'Keterangan'
+                    },
+                    'Penilaian': {
+                        'siswa_id': 'Siswa',
+                        'kriteria_id': 'Kriteria',
+                        'nilai_mentah': 'Nilai Mentah'
+                    }
+                };
+
+                const fields = fieldMappings[formType] || {};
+                let itemCount = 0;
+
+                for (const [key, value] of formData.entries()) {
+                    if (fields[key] && value && !key.includes('password') && !key.includes('_token')) {
+                        let displayValue = value;
+
+                        if (key === 'siswa_id') {
+                            const select = document.querySelector(`select[name="${key}"]`);
+                            displayValue = select ? select.options[select.selectedIndex].text : value;
+                        } else if (key === 'kriteria_id') {
+                            const select = document.querySelector(`select[name="${key}"]`);
+                            displayValue = select ? select.options[select.selectedIndex].text : value;
+                        } else if (key === 'bobot') {
+                            displayValue = (parseFloat(value) * 100).toFixed(1) + '%';
+                        }
+
+                        content += `
+                    <div class="col-6">
+                        <div class="border rounded p-2 bg-white">
+                            <small class="text-muted fw-bold d-block">${fields[key]}</small>
+                            <span class="small">${displayValue}</span>
+                        </div>
+                    </div>`;
+                        itemCount++;
+                    }
+                }
+
+                if (itemCount === 0) {
+                    content += '<div class="col-12 text-center text-muted">Tidak ada data untuk ditampilkan</div>';
+                }
+
+                content += '</div>';
+
+                content += `
+            <div class="alert alert-warning alert-sm mt-3 mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <small>Pastikan semua data sudah benar sebelum menyimpan. Data yang sudah disimpan akan mempengaruhi perhitungan CPI.</small>
+            </div>`;
+
+                return content;
+            }
+
+            submitForm(form) {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    const originalHTML = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...';
+
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalHTML;
+                    }, 10000);
+                }
+
+                form.setAttribute('data-skip-validation', 'true');
+                form.submit();
+            }
+        }
+
+        // Initialize validation modal
+        document.addEventListener('DOMContentLoaded', () => {
+            new ValidationModal();
+        });
+
+        // Additional CSS for validation modal
+        const validationCSS = `
+    <style>
+    .validation-icon {
+        transition: all 0.3s ease;
+    }
+
+    .validation-icon:hover {
+        transform: scale(1.1);
+    }
+
+    .alert-sm {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .alert-sm .fas {
+        font-size: 11px;
+    }
+
+    .form-check-input:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .modal.show .modal-dialog {
+        animation: modalSlideIn 0.3s ease-out;
+    }
+
+    .needs-validation-modal {
+        position: relative;
+    }
+
+    .needs-validation-modal::before {
+        content: '🛡️';
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        font-size: 12px;
+        z-index: 10;
+    }
+    </style>`;
+
+        if (!document.getElementById('validation-modal-css')) {
+            const styleDiv = document.createElement('div');
+            styleDiv.id = 'validation-modal-css';
+            styleDiv.innerHTML = validationCSS;
+            document.head.appendChild(styleDiv);
+        }
+    </script>
+
+    <!-- Toast Container untuk Notifikasi -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="validationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-shield-check text-primary me-2"></i>
+                <strong class="me-auto">Validasi Form</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Sistem validasi form telah aktif. Setiap penambahan data akan memerlukan konfirmasi.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show toast notification on first load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!localStorage.getItem('validation_toast_shown')) {
+                const toast = new bootstrap.Toast(document.getElementById('validationToast'));
+                toast.show();
+                localStorage.setItem('validation_toast_shown', 'true');
+            }
         });
     </script>
 
