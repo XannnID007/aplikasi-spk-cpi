@@ -270,7 +270,8 @@
                                             <td><strong>{{ $siswa->hasilCpi->peringkat }}</strong></td>
                                             <td><strong>{{ $siswa->nama }} (Siswa Ini)</strong></td>
                                             <td class="text-center">
-                                                <strong>{{ number_format($siswa->hasilCpi->skor_total, 2) }}</strong></td>
+                                                <strong>{{ number_format($siswa->hasilCpi->skor_total, 2) }}</strong>
+                                            </td>
                                             <td class="text-center">-</td>
                                             <td class="text-center">
                                                 <span class="badge bg-{{ $siswa->hasilCpi->warna_kategori }}">

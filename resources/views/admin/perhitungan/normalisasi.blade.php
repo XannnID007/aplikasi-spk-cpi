@@ -247,7 +247,8 @@
                                 <li>Kontribusi terendah: <strong>{{ number_format($kontribusiTerendah, 2) }}</strong></li>
                                 <li>Rata-rata kontribusi: <strong>{{ number_format($rataRataKontribusi, 2) }}</strong></li>
                                 <li>Bobot kriteria:
-                                    <strong>{{ number_format($data['kriteria']->bobot * 100, 1) }}%</strong></li>
+                                    <strong>{{ number_format($data['kriteria']->bobot * 100, 1) }}%</strong>
+                                </li>
                             </ul>
                         </div>
                     </div>

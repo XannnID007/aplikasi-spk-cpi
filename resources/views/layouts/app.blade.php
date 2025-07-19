@@ -630,11 +630,6 @@
                         <i class="fas fa-chart-line"></i>Hasil CPI
                     </a>
                 </li>
-                <li>
-                    <a href="{{ route('admin.cetak-hasil') }}" target="_blank">
-                        <i class="fas fa-print"></i>Cetak Laporan
-                    </a>
-                </li>
             @else
                 <!-- Guru Menu -->
                 <li>
