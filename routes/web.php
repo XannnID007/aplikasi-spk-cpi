@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\SiswaController as AdminSiswaController;
 use App\Http\Controllers\Admin\KriteriaController;
 use App\Http\Controllers\Admin\PenilaianController;
 use App\Http\Controllers\Admin\HasilCpiController as AdminHasilCpiController;
-use App\Http\Controllers\Admin\PerhitunganController; // Controller baru
+use App\Http\Controllers\Admin\PerhitunganController;
 
 // Guru Controllers
 use App\Http\Controllers\Guru\DashboardController as GuruDashboardController;
@@ -48,10 +48,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Kriteria Management
     Route::resource('kriteria', KriteriaController::class);
 
-    // Penilaian Management
+    // Penilaian Management - DIPERBAIKI
     Route::resource('penilaian', PenilaianController::class);
 
-    // Data Perhitungan Management (FITUR BARU)
+    // Route tambahan untuk penilaian (TAMBAHAN BARU)
+    Route::get('/penilaian-missing', [PenilaianController::class, 'getSiswaWithMissingAssessments'])->name('penilaian.missing');
+    Route::get('/penilaian-grouped', [PenilaianController::class, 'getGroupedBySiswa'])->name('penilaian.grouped');
+
+    // Data Perhitungan Management
     Route::prefix('perhitungan')->name('perhitungan.')->group(function () {
         Route::get('/', [PerhitunganController::class, 'index'])->name('index');
         Route::get('/siswa/{siswa}', [PerhitunganController::class, 'show'])->name('show');

@@ -200,31 +200,4 @@
         </div>
     </div>
 
-    <!-- Grafik Distribusi Kategori Kesiapan -->
-    @if ($distribusiKategori->count() > 0)
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-chart-pie text-info me-2"></i>Distribusi Kategori Kesiapan
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            @foreach ($distribusiKategori as $kategori)
-                                <div class="col-lg-2 col-md-4 col-6 mb-3 text-center">
-                                    <div class="p-3 border rounded">
-                                        <h4 class="fw-bold text-primary mb-1">{{ $kategori->total }}</h4>
-                                        <p class="mb-1 small">{{ $kategori->kategori_kesiapan }}</p>
-                                        <small
-                                            class="text-muted">{{ number_format(($kategori->total / $totalSiswa) * 100, 1) }}%</small>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
 @endsection

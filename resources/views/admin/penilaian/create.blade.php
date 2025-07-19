@@ -215,14 +215,6 @@
                                 </div>
                             </div>
 
-                            <!-- Existing Assessment Check -->
-                            <div class="col-12 mb-3" id="existing-check" style="display: none;">
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    <strong>Peringatan:</strong> <span id="existing-message"></span>
-                                </div>
-                            </div>
-
                             <!-- Submit Button -->
                             <div class="col-12">
                                 <div class="alert alert-success">
@@ -252,29 +244,31 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Data kriteria untuk info dinamis
-            const kriteriaData = @json(
-                $kriteria->map(function ($k) {
-                    return [
-                        'id' => $k->id,
-                        'kode' => $k->kode,
-                        'nama' => $k->nama,
-                        'tren' => $k->tren,
-                        'bobot' => $k->bobot,
-                        'keterangan' => $k->keterangan,
-                    ];
-                }));
+            const kriteriaData = [
+                @foreach ($kriteria as $k)
+                    {
+                        id: {{ $k->id }},
+                        kode: '{{ $k->kode }}',
+                        nama: '{{ $k->nama }}',
+                        tren: '{{ $k->tren }}',
+                        bobot: {{ $k->bobot }},
+                        keterangan: '{{ $k->keterangan }}'
+                    },
+                @endforeach
+            ];
 
             // Data siswa untuk info dinamis
-            const siswaData = @json(
-                $siswa->map(function ($s) {
-                    return [
-                        'id' => $s->id,
-                        'kode' => $s->kode,
-                        'nama' => $s->nama,
-                        'jenis_kelamin' => $s->jenis_kelamin,
-                        'umur' => $s->umur,
-                    ];
-                }));
+            const siswaData = [
+                @foreach ($siswa as $s)
+                    {
+                        id: {{ $s->id }},
+                        kode: '{{ $s->kode }}',
+                        nama: '{{ $s->nama }}',
+                        jenis_kelamin: '{{ $s->jenis_kelamin }}',
+                        umur: {{ $s->umur ?? 'null' }}
+                    },
+                @endforeach
+            ];
 
             // Initialize tooltips
             const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -290,20 +284,19 @@
                 if (siswaId) {
                     const siswa = siswaData.find(s => s.id == siswaId);
                     if (siswa) {
-                        let info = `<i class="fas fa-user text-primary me-1"></i>`;
+                        let info = '<i class="fas fa-user text-primary me-1"></i>';
                         if (siswa.jenis_kelamin) {
                             const icon = siswa.jenis_kelamin === 'Laki-laki' ? '👦' : '👧';
-                            info += `${icon} ${siswa.jenis_kelamin}`;
+                            info += icon + ' ' + siswa.jenis_kelamin;
                         }
                         if (siswa.umur) {
-                            info += ` | ${siswa.umur} tahun`;
+                            info += ' | ' + siswa.umur + ' tahun';
                         }
                         infoSpan.innerHTML = info;
                     }
                 } else {
                     infoSpan.textContent = '';
                 }
-                checkExistingAssessment();
             });
 
             // Update info kriteria
@@ -326,8 +319,8 @@
 
                         // Update short info
                         const trenIcon = kriteria.tren === 'Positif' ? '📈' : '📉';
-                        infoSpan.innerHTML =
-                            `${trenIcon} ${kriteria.tren} | Bobot: ${(kriteria.bobot * 100).toFixed(1)}%`;
+                        infoSpan.innerHTML = trenIcon + ' ' + kriteria.tren + ' | Bobot: ' + (kriteria
+                            .bobot * 100).toFixed(1) + '%';
 
                         // Update panduan
                         updatePanduanPenilaian(kriteria);
@@ -338,7 +331,6 @@
                     infoSpan.textContent = '';
                     panduanDiv.style.display = 'none';
                 }
-                checkExistingAssessment();
             });
 
             // Update panduan penilaian berdasarkan kriteria
@@ -349,68 +341,58 @@
                 // Panduan umum berdasarkan nama kriteria
                 if (kriteria.nama.toLowerCase().includes('sosial') || kriteria.nama.toLowerCase().includes(
                     'emosi')) {
-                    panduan = `
-                <strong>Amati:</strong> Interaksi dengan teman, kemampuan berbagi, mengontrol emosi<br>
-                <strong>100:</strong> Sangat mudah bersosialisasi, stabil emosi | 
-                <strong>75:</strong> Baik bersosialisasi | 
-                <strong>50:</strong> Cukup | 
-                <strong>25:</strong> Kesulitan berinteraksi | 
-                <strong>0:</strong> Sangat sulit bersosialisasi
-            `;
+                    panduan =
+                        '<strong>Amati:</strong> Interaksi dengan teman, kemampuan berbagi, mengontrol emosi<br>' +
+                        '<strong>100:</strong> Sangat mudah bersosialisasi, stabil emosi | ' +
+                        '<strong>75:</strong> Baik bersosialisasi | ' +
+                        '<strong>50:</strong> Cukup | ' +
+                        '<strong>25:</strong> Kesulitan berinteraksi | ' +
+                        '<strong>0:</strong> Sangat sulit bersosialisasi';
                 } else if (kriteria.nama.toLowerCase().includes('kognitif') || kriteria.nama.toLowerCase().includes(
                         'berpikir')) {
-                    panduan = `
-                <strong>Amati:</strong> Pemahaman konsep, pemecahan masalah, daya ingat<br>
-                <strong>100:</strong> Sangat cepat memahami | 
-                <strong>75:</strong> Mudah memahami | 
-                <strong>50:</strong> Cukup memahami | 
-                <strong>25:</strong> Butuh bantuan | 
-                <strong>0:</strong> Sangat sulit memahami
-            `;
+                    panduan = '<strong>Amati:</strong> Pemahaman konsep, pemecahan masalah, daya ingat<br>' +
+                        '<strong>100:</strong> Sangat cepat memahami | ' +
+                        '<strong>75:</strong> Mudah memahami | ' +
+                        '<strong>50:</strong> Cukup memahami | ' +
+                        '<strong>25:</strong> Butuh bantuan | ' +
+                        '<strong>0:</strong> Sangat sulit memahami';
                 } else if (kriteria.nama.toLowerCase().includes('motorik') || kriteria.nama.toLowerCase().includes(
                         'fisik')) {
-                    panduan = `
-                <strong>Amati:</strong> Koordinasi gerak, keseimbangan, keterampilan tangan<br>
-                <strong>100:</strong> Sangat terampil | 
-                <strong>75:</strong> Terampil | 
-                <strong>50:</strong> Cukup terampil | 
-                <strong>25:</strong> Kurang terampil | 
-                <strong>0:</strong> Sangat kurang terampil
-            `;
+                    panduan = '<strong>Amati:</strong> Koordinasi gerak, keseimbangan, keterampilan tangan<br>' +
+                        '<strong>100:</strong> Sangat terampil | ' +
+                        '<strong>75:</strong> Terampil | ' +
+                        '<strong>50:</strong> Cukup terampil | ' +
+                        '<strong>25:</strong> Kurang terampil | ' +
+                        '<strong>0:</strong> Sangat kurang terampil';
                 } else if (kriteria.nama.toLowerCase().includes('kemandirian')) {
-                    panduan = `
-                <strong>Amati:</strong> Kemampuan melakukan tugas sendiri, inisiatif, tanggung jawab<br>
-                <strong>100:</strong> Sangat mandiri | 
-                <strong>75:</strong> Mandiri | 
-                <strong>50:</strong> Cukup mandiri | 
-                <strong>25:</strong> Perlu bantuan | 
-                <strong>0:</strong> Sangat bergantung
-            `;
+                    panduan =
+                        '<strong>Amati:</strong> Kemampuan melakukan tugas sendiri, inisiatif, tanggung jawab<br>' +
+                        '<strong>100:</strong> Sangat mandiri | ' +
+                        '<strong>75:</strong> Mandiri | ' +
+                        '<strong>50:</strong> Cukup mandiri | ' +
+                        '<strong>25:</strong> Perlu bantuan | ' +
+                        '<strong>0:</strong> Sangat bergantung';
                 } else if (kriteria.nama.toLowerCase().includes('cemas') || kriteria.nama.toLowerCase().includes(
                         'takut')) {
-                    panduan = `
-                <strong>Amati:</strong> Tingkat kecemasan dalam situasi baru atau tantangan<br>
-                <strong>0:</strong> Sangat cemas/takut | 
-                <strong>25:</strong> Cemas | 
-                <strong>50:</strong> Cukup tenang | 
-                <strong>75:</strong> Tenang | 
-                <strong>100:</strong> Sangat tenang dan percaya diri
-            `;
+                    panduan = '<strong>Amati:</strong> Tingkat kecemasan dalam situasi baru atau tantangan<br>' +
+                        '<strong>0:</strong> Sangat cemas/takut | ' +
+                        '<strong>25:</strong> Cemas | ' +
+                        '<strong>50:</strong> Cukup tenang | ' +
+                        '<strong>75:</strong> Tenang | ' +
+                        '<strong>100:</strong> Sangat tenang dan percaya diri';
                 } else {
-                    panduan = `
-                <strong>Panduan Umum:</strong><br>
-                <strong>100:</strong> Sangat baik/optimal | 
-                <strong>75:</strong> Baik | 
-                <strong>50:</strong> Cukup/rata-rata | 
-                <strong>25:</strong> Kurang | 
-                <strong>0:</strong> Sangat kurang
-            `;
+                    panduan = '<strong>Panduan Umum:</strong><br>' +
+                        '<strong>100:</strong> Sangat baik/optimal | ' +
+                        '<strong>75:</strong> Baik | ' +
+                        '<strong>50:</strong> Cukup/rata-rata | ' +
+                        '<strong>25:</strong> Kurang | ' +
+                        '<strong>0:</strong> Sangat kurang';
                 }
 
                 // Tambahan untuk tren negatif
                 if (kriteria.tren === 'Negatif') {
                     panduan +=
-                        `<br><br><span class="text-warning"><strong>⚠️ Tren Negatif:</strong> Semakin rendah nilai semakin baik untuk kriteria ini.</span>`;
+                        '<br><br><span class="text-warning"><strong>⚠️ Tren Negatif:</strong> Semakin rendah nilai semakin baik untuk kriteria ini.</span>';
                 }
 
                 panduanContent.innerHTML = panduan;
@@ -470,34 +452,14 @@
                     description = 'Masukkan nilai penilaian';
                 }
 
-                previewDiv.innerHTML = `
-            <span class="badge ${badgeClass} px-3 py-2 fs-6">${kategori} (${nilai})</span>
-            <br><small class="text-muted mt-1">${description}</small>
-        `;
+                previewDiv.innerHTML = '<span class="badge ' + badgeClass + ' px-3 py-2 fs-6">' + kategori + ' (' +
+                    nilai + ')</span>' +
+                    '<br><small class="text-muted mt-1">' + description + '</small>';
 
                 // Update progress bar
                 progressBar.style.width = nilai + '%';
                 progressBar.textContent = nilai + '%';
                 progressBar.className = 'progress-bar ' + badgeClass.replace('bg-', '');
-            }
-
-            // Check existing assessment
-            function checkExistingAssessment() {
-                const siswaId = document.getElementById('siswa_id').value;
-                const kriteriaId = document.getElementById('kriteria_id').value;
-                const existingDiv = document.getElementById('existing-check');
-                const existingMessage = document.getElementById('existing-message');
-
-                if (siswaId && kriteriaId) {
-                    // Simulasi pengecekan - dalam implementasi nyata gunakan AJAX
-                    // Untuk demo, kita anggap tidak ada duplikat
-                    existingDiv.style.display = 'none';
-
-                    // Aktifkan tombol submit
-                    document.getElementById('submitBtn').disabled = false;
-                } else {
-                    existingDiv.style.display = 'none';
-                }
             }
 
             // Form validation sebelum submit
@@ -519,127 +481,15 @@
                 }
             });
 
-            // Auto-save draft (opsional)
-            let autoSaveTimer;
-
-            function autoSaveDraft() {
-                clearTimeout(autoSaveTimer);
-                autoSaveTimer = setTimeout(() => {
-                    const formData = {
-                        siswa_id: document.getElementById('siswa_id').value,
-                        kriteria_id: document.getElementById('kriteria_id').value,
-                        nilai_mentah: document.getElementById('nilai_mentah').value
-                    };
-
-                    if (formData.siswa_id && formData.kriteria_id && formData.nilai_mentah) {
-                        localStorage.setItem('penilaian_draft', JSON.stringify(formData));
-                        console.log('Draft tersimpan otomatis');
-                    }
-                }, 2000);
-            }
-
-            // Load draft jika ada
-            function loadDraft() {
-                const draft = localStorage.getItem('penilaian_draft');
-                if (draft) {
-                    try {
-                        const data = JSON.parse(draft);
-                        if (data.siswa_id) document.getElementById('siswa_id').value = data.siswa_id;
-                        if (data.kriteria_id) document.getElementById('kriteria_id').value = data.kriteria_id;
-                        if (data.nilai_mentah) {
-                            document.getElementById('nilai_mentah').value = data.nilai_mentah;
-                            updateNilai(data.nilai_mentah);
-                        }
-
-                        // Trigger change events
-                        document.getElementById('siswa_id').dispatchEvent(new Event('change'));
-                        document.getElementById('kriteria_id').dispatchEvent(new Event('change'));
-
-                        console.log('Draft dimuat');
-                    } catch (e) {
-                        console.error('Error loading draft:', e);
-                    }
-                }
-            }
-
-            // Bind auto-save events
-            ['siswa_id', 'kriteria_id', 'nilai_mentah'].forEach(fieldId => {
-                document.getElementById(fieldId).addEventListener('change', autoSaveDraft);
-                document.getElementById(fieldId).addEventListener('input', autoSaveDraft);
-            });
-
-            // Clear draft setelah submit berhasil
-            document.getElementById('penilaianCreateForm').addEventListener('submit', function() {
-                localStorage.removeItem('penilaian_draft');
-            });
-
-            // Load draft saat halaman dimuat
-            loadDraft();
-
-            // Trigger events untuk form yang sudah ada nilai default
-            document.getElementById('siswa_id').dispatchEvent(new Event('change'));
-            document.getElementById('kriteria_id').dispatchEvent(new Event('change'));
-
             // Update nilai awal jika ada
             const initialValue = document.getElementById('nilai_mentah').value;
             if (initialValue) {
                 updateNilai(initialValue);
             }
 
-            // Keyboard shortcuts
-            document.addEventListener('keydown', function(e) {
-                // Ctrl + Enter untuk submit
-                if (e.ctrlKey && e.key === 'Enter') {
-                    e.preventDefault();
-                    document.getElementById('submitBtn').click();
-                }
-
-                // Arrow keys untuk mengubah nilai
-                if (document.activeElement === nilaiInput) {
-                    if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        const newValue = Math.min(100, parseInt(nilaiInput.value || 0) + 5);
-                        updateNilai(newValue);
-                    } else if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        const newValue = Math.max(0, parseInt(nilaiInput.value || 0) - 5);
-                        updateNilai(newValue);
-                    }
-                }
-            });
-
-            // Quick assessment buttons
-            function addQuickAssessmentButtons() {
-                const nilaiContainer = nilaiInput.parentElement.parentElement;
-                const quickButtons = document.createElement('div');
-                quickButtons.className = 'mt-2';
-                quickButtons.innerHTML = `
-            <small class="text-muted fw-bold d-block mb-1">Penilaian Cepat:</small>
-            <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn btn-outline-danger quick-assess" data-nilai="10">Sangat Kurang</button>
-                <button type="button" class="btn btn-outline-warning quick-assess" data-nilai="30">Kurang</button>
-                <button type="button" class="btn btn-outline-info quick-assess" data-nilai="50">Cukup</button>
-                <button type="button" class="btn btn-outline-primary quick-assess" data-nilai="75">Baik</button>
-                <button type="button" class="btn btn-outline-success quick-assess" data-nilai="90">Sangat Baik</button>
-            </div>
-        `;
-
-                nilaiContainer.appendChild(quickButtons);
-
-                // Event listeners untuk quick buttons
-                document.querySelectorAll('.quick-assess').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        updateNilai(this.dataset.nilai);
-
-                        // Visual feedback
-                        document.querySelectorAll('.quick-assess').forEach(b => b.classList.remove(
-                            'active'));
-                        this.classList.add('active');
-                    });
-                });
-            }
-
-            addQuickAssessmentButtons();
+            // Trigger events untuk form yang sudah ada nilai default
+            document.getElementById('siswa_id').dispatchEvent(new Event('change'));
+            document.getElementById('kriteria_id').dispatchEvent(new Event('change'));
         });
     </script>
 @endpush

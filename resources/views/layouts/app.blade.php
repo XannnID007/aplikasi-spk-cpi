@@ -536,7 +536,7 @@
         <a class="navbar-brand"
             href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('guru.dashboard') }}">
             <i class="fas fa-graduation-cap"></i>
-            SPK CPI - PAUDQU
+            KidsReady
         </a>
 
         <!-- Right Side -->
